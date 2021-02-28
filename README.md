@@ -1,0 +1,1 @@
+# ApplicationInisghts-Queries
