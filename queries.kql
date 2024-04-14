@@ -1,55 +1,97 @@
 // Kusto Query Language
 // https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/
-
+=======================================================================
 // Query com quantidade de requisições por país/região de origem,
 // incluindo o uso de Alias para os campos de retorno
 requests
 | summarize Qtde=count() by AreaOrigem=client_CountryOrRegion
-
+=======================================================================
 // Gráfico do tipo pizza com requisições por país/região origem
 requests
 | summarize Qtde=count() by CidadeOrigem=client_CountryOrRegion 
 | render piechart
-
+=======================================================================
 // Query simples com quantidade de requisições por cidade de origem
 requests
 | summarize count() by client_City 
-
+=======================================================================
 // Query com quantidade de requisições por cidade de origem,
 // incluindo o uso de Alias para os campos de retorno requests
 | summarize Qtde=count() by CidadeOrigem=client_City 
-
+=======================================================================
 // Gráfico do tipo pizza com requisições por cidade origem
 requests
 | summarize Qtde=count() by CidadeOrigem=client_City 
 | render piechart
-
+=======================================================================
 // Query simples com quantidade de requisições por container
 requests
 | summarize count() by cloud_RoleInstance 
-
+=======================================================================
 // Query com quantidade de requisições por container,
 // incluindo o uso de Alias para os campos de retorno
 requests
 | summarize Qtde=count() by Container=cloud_RoleInstance 
-
+=======================================================================
 // Query com quantidade de requisições e tempo médio de resposta por container,
 // incluindo o uso de Alias para os campos de retorno
 requests
 | summarize Qtde=count(), TempoMedio=avg(duration) by Container=cloud_RoleInstance 
-
+=======================================================================
 // Gráfico do tipo pizza com requisições por container
 requests
 | summarize Qtde=count() by Container=cloud_RoleInstance 
 | render piechart
-
+=======================================================================
 // Esta query faz uso de KQL (Kusto query language)
-
 requests
 | summarize totalCount=sum(itemCount) by client_City
 | render piechart
-
+=======================================================================
 dependencies 
 | limit 1000 
 | where operation_Name == "GET Bolsas/Get" and duration > 150 
 | project operation_Name, timestamp, data, duration 
+=======================================================================
+requests
+//| where 
+//(operation_Name contains_cs "app-name-xxx" or operation_Name contains_cs "app-name-xxx") and
+// (url contains "ambiente-hml" or url contains "caogs")
+| summarize TotalRequests = count(), 
+            SuccessfulRequests = sum(iff(success == true, 1, 0)),
+            FailedRequests = sum(iff(success == false, 1, 0)),
+            ImpactedUsers = dcount(user_Id) by operation_Name, url, source
+| order by TotalRequests desc
+| render piechart
+=======================================================================
+requests
+| where timestamp >= ago(30d)
+| summarize
+    TotalRequests = count(), 
+    SuccessfulRequests = countif(success == true),
+    FailedRequests = countif(success == false)
+    by operation_Name
+| order by TotalRequests desc
+| render table
+=======================================================================
+requests
+| where timestamp > ago(1d)
+| summarize count() by performanceBucket
+| order by performanceBucket asc
+| render piechart 
+=======================================================================
+let dataSet = requests
+| where timestamp > ago(1d);
+let totalCount = toscalar(dataSet | count);
+dataSet
+| extend requestPerformanceBucket = 
+    iff(duration <= 300, "0-300ms",
+    iff(duration <= 600, "301-600ms",
+    iff(duration <= 1500, "601ms-1.5s",
+    iff(duration <= 2000, "1.501s-2s",
+    iff(duration <= 4000, "2.001s-4s", ">4s")))))
+| summarize Count = count() by requestPerformanceBucket
+| extend Percentage = strcat(round(Count / totalCount * 100, 2), "%")
+| project Bucket = requestPerformanceBucket, Count, Percentage
+| render piechart
+
