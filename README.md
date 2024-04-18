@@ -1,1 +1,1 @@
-# ApplicationInisghts-Queries
+# AppilicationInsights-Queries
