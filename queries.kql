@@ -95,3 +95,24 @@ dataSet
 | project Bucket = requestPerformanceBucket, Count, Percentage
 | render piechart
 
+=======================================================================
+
+let AllAPIs = datatable(APIName:string) 
+[
+    "api-abc-qa",
+    "api-abc-dev",
+    "api-deploy-dev",
+    "api-chdeploy-qa"
+] | extend APIName = tostring(APIName);
+let ConsumedAPIs =
+    requests
+    | where timestamp > ago(7d)
+    | extend APIName = strcat(tostring(split(operation_Name, ";")[0]))
+    | summarize
+        TotalRequests = count(), 
+        SuccessfulRequests = countif(success == true),
+        FailedRequests = countif(success == false)
+    by APIName;
+AllAPIs
+| join kind=leftouter (ConsumedAPIs) on APIName
+| project APIName, TotalRequests = iff(isnotempty(TotalRequests), TotalRequests, 0), SuccessfulRequests = iff(isnotempty(SuccessfulRequests), SuccessfulRequests, 0), FailedRequests = iff(isnotempty(FailedRequests), FailedRequests, 0)
