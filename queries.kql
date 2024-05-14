@@ -140,3 +140,4 @@ let ConsumedAPIs =
 AllAPIs
 | join kind=leftouter (ConsumedAPIs) on APIName
 | project APIName, TotalRequests = iff(isnotempty(TotalRequests), TotalRequests, 0), SuccessfulRequests = iff(isnotempty(SuccessfulRequests), SuccessfulRequests, 0), FailedRequests = iff(isnotempty(FailedRequests), FailedRequests, 0)
+
