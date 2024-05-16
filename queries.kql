@@ -126,8 +126,8 @@ let AllAPIs = datatable(APIName:string)
     "api-deploy-dev",
     "api-chdeploy-qa"
 ] | extend APIName = tostring(APIName);
-let startDate = datetime(2024-05-07);
-let endDate = datetime(2024-05-13);
+let startDate = datetime(2024-05-07 00:00:00);
+let endDate = datetime(2024-05-13 23:59:59);
 let ConsumedAPIs =
     requests
     | where timestamp between (startDate .. endDate)
