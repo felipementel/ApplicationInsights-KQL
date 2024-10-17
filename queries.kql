@@ -147,5 +147,6 @@ requests
 | where resultCode == "200" // Filtra apenas requisições bem-sucedidas (opcional)
 | extend measurements = parse_json(customMeasurements) // Converte o campo customMeasurements para JSON
 | where toint(measurements["Response Size"]) > 300 * 1024 // Filtra respostas cujo tamanho seja maior que 300 KB
-| extend ResponseSizeKB = toint(measurements["Response Size"]) / 1024 // Converte o tamanho da resposta de bytes para KB
-| project timestamp, name, resultCode, ResponseSizeKB, measurements, url // Seleciona as colunas desejadas e exibe o tamanho em KB
+| extend ResponseSizeKB = toint(measurements["Response Size"]) / 1024, // Converte o tamanho da resposta de bytes para KB
+         ResponseSizeMB = toint(measurements["Response Size"]) / (1024 * 1024) // Converte o tamanho da resposta para MB
+| project timestamp, name, resultCode, ResponseSizeKB, ResponseSizeMB, measurements, url // Seleciona as colunas desejadas e exibe o tamanho em KB e MB
